@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminbuchung - Verfügbare Termine</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📅 Terminbuchung</h1>
+            <p>Wählen Sie einen verfügbaren Termin aus</p>
+        </header>
+
+        <main>
+            <div class="controls">
+                <button id="prevWeek" class="btn-nav">← Vorherige Woche</button>
+                <h2 id="weekDisplay"></h2>
+                <button id="nextWeek" class="btn-nav">Nächste Woche →</button>
+            </div>
+
+            <div class="calendar-container">
+                <div id="calendar" class="calendar"></div>
+            </div>
+
+            <div class="booking-info">
+                <h3>Gewählter Termin:</h3>
+                <p id="selectedDateTime">Noch kein Termin ausgewählt</p>
+                <button id="bookBtn" class="btn-book" disabled>Termin buchen</button>
+            </div>
+        </main>
+
+        <div id="bookingModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Termin bestätigen</h2>
+                <p id="confirmText"></p>
+                <input type="text" id="nameInput" placeholder="Ihr Name" required>
+                <input type="email" id="emailInput" placeholder="Ihre E-Mail" required>
+                <button id="confirmBtn" class="btn-confirm">Bestätigen</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
