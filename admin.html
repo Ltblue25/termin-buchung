@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminbuchung - Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="nav-logo">📅 Terminbuchung</h1>
+                <ul class="nav-menu">
+                    <li><a href="index.html" class="nav-link">Buchung</a></li>
+                    <li><a href="admin.html" class="nav-link active">Admin</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="admin-container">
+            <!-- Sidebar -->
+            <aside class="admin-sidebar">
+                <button class="sidebar-btn active" data-tab="advisors">
+                    👥 Berater
+                </button>
+                <button class="sidebar-btn" data-tab="timeslots">
+                    ⏰ Zeitslots
+                </button>
+                <button class="sidebar-btn" data-tab="appointments">
+                    📋 Termine
+                </button>
+                <button class="sidebar-btn" data-tab="settings">
+                    ⚙️ Einstellungen
+                </button>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="admin-content">
+                <!-- Tab: Berater -->
+                <section id="advisors" class="admin-tab active">
+                    <h2>Berater verwalten</h2>
+                    
+                    <div class="form-section">
+                        <h3>Neuen Berater hinzufügen</h3>
+                        <div class="form-group">
+                            <input type="text" id="advisorName" placeholder="Name des Beraters" required>
+                            <input type="email" id="advisorEmail" placeholder="E-Mail-Adresse" required>
+                            <input type="text" id="advisorPhone" placeholder="Telefonnummer (optional)">
+                            <button id="addAdvisorBtn" class="btn-primary">Berater hinzufügen</button>
+                        </div>
+                    </div>
+
+                    <div class="list-section">
+                        <h3>Aktive Berater</h3>
+                        <div id="advisorsList" class="items-list">
+                            <p class="empty-state">Keine Berater vorhanden</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab: Zeitslots -->
+                <section id="timeslots" class="admin-tab">
+                    <h2>Zeitslots konfigurieren</h2>
+                    
+                    <div class="form-section">
+                        <h3>Allgemeine Einstellungen</h3>
+                        <div class="form-group">
+                            <label>Slot-Dauer (Minuten):</label>
+                            <input type="number" id="slotDuration" min="15" max="120" step="15" value="20" required>
+                            
+                            <label>Arbeitstag Anfang:</label>
+                            <input type="time" id="workdayStart" value="08:00" required>
+                            
+                            <label>Arbeitstag Ende:</label>
+                            <input type="time" id="workdayEnd" value="17:00" required>
+                            
+                            <label>Verfügbare Wochentage:</label>
+                            <div class="weekdays-selector">
+                                <label><input type="checkbox" value="1" checked> Montag</label>
+                                <label><input type="checkbox" value="2" checked> Dienstag</label>
+                                <label><input type="checkbox" value="3" checked> Mittwoch</label>
+                                <label><input type="checkbox" value="4" checked> Donnerstag</label>
+                                <label><input type="checkbox" value="5" checked> Freitag</label>
+                                <label><input type="checkbox" value="6"> Samstag</label>
+                                <label><input type="checkbox" value="0"> Sonntag</label>
+                            </div>
+                            
+                            <button id="saveTimeslotsBtn" class="btn-primary">Einstellungen speichern</button>
+                        </div>
+                    </div>
+
+                    <div class="preview-section">
+                        <h3>Vorschau der Zeitslots</h3>
+                        <div id="slotsPreview" class="slots-preview"></div>
+                    </div>
+                </section>
+
+                <!-- Tab: Termine -->
+                <section id="appointments" class="admin-tab">
+                    <h2>Gebuchte Termine verwalten</h2>
+                    
+                    <div class="filter-section">
+                        <input type="text" id="appointmentFilter" placeholder="Nach Name, E-Mail oder Berater filtern...">
+                        <button id="clearFilterBtn" class="btn-secondary">Filter löschen</button>
+                        <button id="exportBtn" class="btn-secondary">📥 Exportieren</button>
+                    </div>
+
+                    <div class="list-section">
+                        <div id="appointmentsList" class="appointments-list">
+                            <p class="empty-state">Keine Termine vorhanden</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab: Einstellungen -->
+                <section id="settings" class="admin-tab">
+                    <h2>Systemeinstellungen</h2>
+                    
+                    <div class="form-section">
+                        <h3>Globale Einstellungen</h3>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="roundRobinEnabled" checked>
+                                Round-Robin Verteilung aktivieren
+                            </label>
+                            <p class="help-text">Wenn aktiviert, werden Termine automatisch gleichmäßig auf alle Berater verteilt</p>
+                            
+                            <label>
+                                <input type="checkbox" id="emailNotificationsEnabled" checked>
+                                E-Mail-Benachrichtigungen aktivieren
+                            </label>
+                            <p class="help-text">Berater erhalten E-Mail-Benachrichtigungen für neue Termine</p>
+                            
+                            <label>
+                                <input type="checkbox" id="futureBookingsOnly" checked>
+                                Nur zukünftige Termine buchen
+                            </label>
+                            <p class="help-text">Verhindert Buchungen für Zeiten in der Vergangenheit</p>
+                            
+                            <label>Mindesttage im Voraus für Buchung:</label>
+                            <input type="number" id="minDaysAdvance" min="0" max="30" value="0" required>
+                            <p class="help-text">Minimum Tage, die zwischen Buchung und Termin liegen müssen</p>
+                            
+                            <button id="saveSettingsBtn" class="btn-primary">Einstellungen speichern</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Datenverwaltung</h3>
+                        <div class="button-group">
+                            <button id="backupBtn" class="btn-secondary">💾 Sicherung erstellen</button>
+                            <button id="restoreBtn" class="btn-secondary">📂 Sicherung wiederherstellen</button>
+                            <input type="file" id="restoreFile" accept=".json" style="display: none;">
+                            <button id="clearDataBtn" class="btn-danger">🗑️ Alle Daten löschen</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Statistiken</h3>
+                        <div id="statisticsContainer" class="statistics-grid">
+                            <!-- Statistics will be inserted here -->
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal für Berater-Bearbeitung -->
+    <div id="editAdvisorModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Berater bearbeiten</h2>
+            <div class="form-group">
+                <input type="text" id="editAdvisorName" placeholder="Name" required>
+                <input type="email" id="editAdvisorEmail" placeholder="E-Mail" required>
+                <input type="text" id="editAdvisorPhone" placeholder="Telefonnummer">
+                <button id="updateAdvisorBtn" class="btn-primary">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal für Termin-Details -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Termindetails</h2>
+            <div id="appointmentDetails"></div>
+            <button id="deleteAppointmentBtn" class="btn-danger">Termin löschen</button>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
