@@ -2,15 +2,19 @@
 let currentWeekStart = getMonday(new Date());
 let selectedDateTime = null;
 let bookedAppointments = JSON.parse(localStorage.getItem('bookedAppointments')) || [];
+let systemConfig = JSON.parse(localStorage.getItem('systemConfig')) || getDefaultConfig();
 
-// Time slots configuration (in 20-minute intervals)
-const TIME_SLOTS = [
-    '08:00', '08:20', '08:40', '09:00', '09:20', '09:40',
-    '10:00', '10:20', '10:40', '11:00', '11:20', '11:40',
-    '12:00', '12:20', '12:40', '13:00', '13:20', '13:40',
-    '14:00', '14:20', '14:40', '15:00', '15:20', '15:40',
-    '16:00', '16:20', '16:40', '17:00', '17:20', '17:40'
-];
+function getDefaultConfig() {
+    return {
+        slotDuration: 20,
+        workdayStart: '08:00',
+        workdayEnd: '17:00',
+        workdays: [1, 2, 3, 4, 5],
+        roundRobinEnabled: true,
+        futureBookingsOnly: true,
+        minDaysAdvance: 0
+    };
+}
 
 // Helper Functions
 function getMonday(date) {
@@ -64,6 +68,28 @@ function isSlotInPast(date, timeSlot) {
     return slotDate < new Date();
 }
 
+function isWeekdayAvailable(date) {
+    return systemConfig.workdays.includes(date.getDay());
+}
+
+function generateTimeSlots() {
+    const slots = [];
+    const start = systemConfig.workdayStart.split(':').map(Number);
+    const end = systemConfig.workdayEnd.split(':').map(Number);
+    
+    let currentMinutes = start[0] * 60 + start[1];
+    const endMinutes = end[0] * 60 + end[1];
+    
+    while (currentMinutes < endMinutes) {
+        const hours = Math.floor(currentMinutes / 60);
+        const minutes = currentMinutes % 60;
+        slots.push(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
+        currentMinutes += systemConfig.slotDuration;
+    }
+    
+    return slots;
+}
+
 // Render Calendar
 function renderCalendar() {
     const calendar = document.getElementById('calendar');
@@ -72,6 +98,11 @@ function renderCalendar() {
     const weekDays = getWeekDays(currentWeekStart);
     
     weekDays.forEach((day, index) => {
+        // Skip days that are not in workdays
+        if (!isWeekdayAvailable(day)) {
+            return;
+        }
+        
         const dayColumn = document.createElement('div');
         dayColumn.className = 'day-column';
         
@@ -91,7 +122,8 @@ function renderCalendar() {
         
         // Add time slots
         const slotsContainer = document.getElementById(`slots-${dateStr}`);
-        TIME_SLOTS.forEach(timeSlot => {
+        const timeSlots = generateTimeSlots();
+        timeSlots.forEach(timeSlot => {
             const slot = document.createElement('div');
             slot.className = 'time-slot';
             slot.textContent = timeSlot;
@@ -201,6 +233,21 @@ confirmBtn.addEventListener('click', () => {
         return;
     }
     
+    // Get advisor using Round-Robin from admin system
+    const advisors = JSON.parse(localStorage.getItem('advisors')) || [];
+    let advisor = null;
+    
+    if (advisors.length > 0 && systemConfig.roundRobinEnabled) {
+        const lastIndex = JSON.parse(localStorage.getItem('systemConfig') || '{}').lastRoundRobinIndex || 0;
+        const nextIndex = lastIndex % advisors.length;
+        advisor = advisors[nextIndex];
+        
+        // Update index
+        const config = JSON.parse(localStorage.getItem('systemConfig') || '{}');
+        config.lastRoundRobinIndex = (nextIndex + 1) % advisors.length;
+        localStorage.setItem('systemConfig', JSON.stringify(config));
+    }
+    
     // Save booking
     const appointment = {
         id: Date.now(),
@@ -208,6 +255,7 @@ confirmBtn.addEventListener('click', () => {
         time: selectedDateTime.time,
         name: name,
         email: email,
+        advisor: advisor,
         bookedAt: new Date().toISOString()
     };
     
@@ -215,7 +263,8 @@ confirmBtn.addEventListener('click', () => {
     localStorage.setItem('bookedAppointments', JSON.stringify(bookedAppointments));
     
     // Show success message
-    alert(`✅ Termin erfolgreich gebucht!\n\nBestätigung wurde an ${email} gesendet.`);
+    const advisorName = advisor ? ` mit ${advisor.name}` : '';
+    alert(`✅ Termin erfolgreich gebucht!\n\nBestätigung wurde an ${email} gesendet.${advisorName ? '\n' + advisorName : ''}`);
     
     // Reset form
     document.getElementById('nameInput').value = '';
@@ -233,5 +282,6 @@ confirmBtn.addEventListener('click', () => {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    systemConfig = JSON.parse(localStorage.getItem('systemConfig')) || getDefaultConfig();
     renderCalendar();
 });
