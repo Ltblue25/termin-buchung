@@ -1,4 +1,4 @@
-// Keep advisor appointment totals synchronized with the actual bookings.
+// Synchronisiert die angezeigten Terminzähler mit den tatsächlich gespeicherten Buchungen.
 (function () {
     function readArray(key) {
         try {
@@ -9,32 +9,33 @@
         }
     }
 
-    function getAppointmentCount(advisor, appointments) {
-        return appointments.filter(appointment => {
-            const assigned = appointment.advisor;
-            if (!assigned) return false;
+    function advisorMatchesBooking(advisor, booking) {
+        const assigned = booking && booking.advisor;
+        if (!assigned) return false;
 
-            // Prefer the stable advisor ID. The fallbacks also support older bookings.
-            if (assigned.id !== undefined && advisor.id !== undefined) {
-                return String(assigned.id) === String(advisor.id);
-            }
-            return assigned.email === advisor.email || assigned.name === advisor.name;
-        }).length;
+        // Neue Buchungen enthalten die stabile ID. Die Fallbacks unterstützen
+        // bereits vorhandene Buchungen mit Name oder E-Mail.
+        if (assigned.id != null && advisor.id != null) {
+            return String(assigned.id) === String(advisor.id);
+        }
+        return assigned.email === advisor.email || assigned.name === advisor.name;
     }
 
-    function renderAdvisorsWithCurrentCounts() {
-        if (!window.admin || !window.advisorsList) return;
+    function refreshAdvisorCounts() {
+        const list = document.getElementById('advisorsList');
+        if (!list) return;
 
-        const advisors = window.admin.advisors || [];
+        const advisors = readArray('advisors');
         const appointments = readArray('bookedAppointments');
 
-        if (!advisors.length) {
-            window.advisorsList.innerHTML = '<p class="empty-state">Keine Berater vorhanden</p>';
+        if (advisors.length === 0) {
+            list.innerHTML = '<p class="empty-state">Keine Berater vorhanden</p>';
             return;
         }
 
-        window.advisorsList.innerHTML = advisors.map(advisor => {
-            const count = getAppointmentCount(advisor, appointments);
+        list.innerHTML = advisors.map(advisor => {
+            const count = appointments.filter(booking => advisorMatchesBooking(advisor, booking)).length;
+            const appointmentLabel = count === 1 ? 'Termin' : 'Termine';
             const phone = advisor.phone
                 ? `<div class="item-card-detail">📞 ${advisor.phone}</div>`
                 : '';
@@ -45,7 +46,7 @@
                         <div class="item-card-name">${advisor.name}</div>
                         <div class="item-card-detail">📧 ${advisor.email}</div>
                         ${phone}
-                        <div class="item-card-detail">📋 ${count} ${count === 1 ? 'Termin' : 'Termine'}</div>
+                        <div class="item-card-detail">📋 ${count} ${appointmentLabel}</div>
                     </div>
                     <div class="item-card-actions">
                         <button class="btn-small btn-small-edit" onclick="editAdvisor(${advisor.id})">✏️ Bearbeiten</button>
@@ -56,12 +57,7 @@
         }).join('');
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // admin.js registers its initialization listener first. This replaces the
-        // renderer before that listener executes.
-        if (window.admin && window.advisorsList) {
-            window.renderAdvisorsList = renderAdvisorsWithCurrentCounts;
-            renderAdvisorsWithCurrentCounts();
-        }
-    });
+    // admin.js rendert zunächst seine Liste. Danach überschreiben wir nur die
+    // Darstellung der Zähler, ohne die bestehende Admin-Logik zu verändern.
+    document.addEventListener('DOMContentLoaded', refreshAdvisorCounts);
 })();
