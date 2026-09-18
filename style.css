@@ -178,7 +178,15 @@ main {
     font-size: 1.2em;
     color: var(--text);
     font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.remaining-slots {
+    min-height: 24px;
     margin-bottom: 20px;
+    color: var(--success-color);
+    font-size: 0.95em;
+    font-weight: 600;
 }
 
 .btn-book {
